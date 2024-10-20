@@ -34,6 +34,9 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
             docker stop gachon-tools-server || true
             docker rm gachon-tools-server || true
-            docker run -d --name gachon-tools-server -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
+            docker run -d --name gachon-tools-server -p 8080:8080 \
+            -e SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            -e SUPABASE_KEY=${{ secrets.SUPABASE_KEY }} \
+            ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
 
             echo "Deployment completed successfully."
