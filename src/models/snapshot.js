@@ -1,20 +1,29 @@
 const supabase = require("../config/supabase");
+const retry = require("async-retry");
 
 class Snapshot {
   static async create(universityId, url, path, html, courseId) {
-    const { data, error } = await supabase
-      .from("snapshots")
-      .insert({
-        university_id: universityId,
-        url,
-        path,
-        html,
-        course_id: courseId,
-      })
-      .select();
+    return retry(
+      async () => {
+        const { data, error } = await supabase
+          .from("snapshots")
+          .insert({
+            university_id: universityId,
+            url,
+            path,
+            html,
+            course_id: courseId,
+          })
+          .select();
 
-    if (error) throw error;
-    return data[0];
+        if (error) throw error;
+        return data[0];
+      },
+      {
+        retries: 3, // 3회 재시도
+        minTimeout: 1000,
+      }
+    );
   }
 
   static async findAll(universityId, path, courseId) {

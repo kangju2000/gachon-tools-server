@@ -6,6 +6,10 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   try {
     const { universityId, url, path, html, courseId } = req.body;
+    if (!universityId || !url || !path || !html || !courseId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
     const snapshot = await Snapshot.create(
       universityId,
       url,
@@ -13,6 +17,7 @@ router.post("/", async (req, res) => {
       html,
       courseId
     );
+
     res.status(201).json(snapshot);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -25,6 +30,7 @@ router.get("/", async (req, res) => {
     if (!universityId) {
       return res.status(400).json({ error: "University ID is required" });
     }
+
     const snapshots = await Snapshot.findAll(universityId, path, courseId);
     res.json(snapshots);
   } catch (error) {

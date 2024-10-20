@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const logger = require("./logger");
 const snapshotRoutes = require("./routes/snapshots");
 
 const app = express();
@@ -28,7 +29,16 @@ app.use(
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+  logger.info(`Received request: ${req.method} ${req.url}`);
+  next();
+});
+
 app.use("/api/snapshots", snapshotRoutes);
+
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
