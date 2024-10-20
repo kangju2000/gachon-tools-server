@@ -31,6 +31,15 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            if ! command -v docker &> /dev/null
+            then
+              sudo yum update -y
+              sudo amazon-linux-extras install docker
+              sudo service docker start
+              sudo usermod -a -G docker ec2-user
+              exec sudo su -l $USER
+            fi
+
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
             docker stop gachon-tools-server || true
             docker rm gachon-tools-server || true
