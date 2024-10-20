@@ -30,9 +30,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_SSH_PORT }}
           script: |
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
             docker stop gachon-tools-server || true
             docker rm gachon-tools-server || true
-            docker run -d --name gachon-tools-server -p ${{ secrets.EC2_SSH_PORT }}:${{ secrets.EC2_SSH_PORT }} ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
+            docker run -d --name gachon-tools-server -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
