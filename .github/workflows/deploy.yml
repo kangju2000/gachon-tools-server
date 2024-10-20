@@ -33,14 +33,23 @@ jobs:
           script: |
             if ! command -v docker &> /dev/null
             then
+              echo "Docker not found. Installing Docker..."
               sudo yum update -y
-              sudo amazon-linux-extras install docker
-              sudo service docker start
-              sudo usermod -a -G docker ec2-user
-              exec sudo su -l $USER
+              sudo yum install -y docker
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker $USER
+              echo "Docker installed successfully."
+            else
+              echo "Docker is already installed."
             fi
+
+            sudo groupadd docker || true
+            sudo usermod -aG docker $USER
 
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
             docker stop gachon-tools-server || true
             docker rm gachon-tools-server || true
             docker run -d --name gachon-tools-server -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/gachon-tools-server:latest
+
+            echo "Deployment completed successfully."
