@@ -1,29 +1,39 @@
 const supabase = require("../config/supabase");
 const retry = require("async-retry");
+const { objectToCamel } = require("ts-case-convert");
 
 class Snapshot {
-  static async create(universityId, url, path, html, courseId) {
-    return retry(
-      async () => {
-        const { data, error } = await supabase
-          .from("snapshots")
-          .insert({
-            university_id: universityId,
-            url,
-            path,
-            html,
-            course_id: courseId,
-          })
-          .select();
+  static async create(universityId, url, dataArray) {
+    const snapshots = [];
 
-        if (error) throw error;
-        return data[0];
-      },
-      {
-        retries: 3, // 3회 재시도
-        minTimeout: 1000,
-      }
-    );
+    for (const data of dataArray) {
+      const { path, html, courseId } = data;
+
+      const snapshot = await retry(
+        async () => {
+          const { data: snapshotData, error } = await supabase
+            .from("snapshots")
+            .insert({
+              university_id: universityId,
+              path,
+              html,
+              course_id: courseId,
+            })
+            .select();
+
+          if (error) throw error;
+          return snapshotData[0];
+        },
+        {
+          retries: 3, // 3회 재시도
+          minTimeout: 1000,
+        }
+      );
+
+      snapshots.push(snapshot);
+    }
+
+    return snapshots;
   }
 
   static async findAll(universityId, path, courseId) {
@@ -40,7 +50,7 @@ class Snapshot {
     });
 
     if (error) throw error;
-    return data;
+    return data.map(objectToCamel);
   }
 
   static async findById(id) {
@@ -51,7 +61,7 @@ class Snapshot {
       .single();
 
     if (error) throw error;
-    return data;
+    return objectToCamel(data);
   }
 }
 

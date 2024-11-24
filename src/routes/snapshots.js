@@ -5,19 +5,23 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-    const { universityId, url, path, html, courseId } = req.body;
-    if (!universityId || !url || !path || !html || !courseId) {
-      return res.status(400).json({ error: "Missing required fields" });
+    const { universityId, url, snapshots } = req.body;
+    if (!universityId || !url || !Array.isArray(snapshots)) {
+      return res
+        .status(400)
+        .json({ error: "Missing required fields or invalid data format" });
     }
 
-    const snapshot = await Snapshot.create(
-      universityId,
-      url,
-      path,
-      html,
-      courseId
-    );
+    for (const item of snapshots) {
+      const { path, html, courseId } = item;
+      if (!path || !html || !courseId) {
+        return res
+          .status(400)
+          .json({ error: "Missing required fields in data array" });
+      }
+    }
 
+    const snapshot = await Snapshot.create(universityId, url, snapshots);
     res.status(201).json(snapshot);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -30,7 +34,6 @@ router.get("/", async (req, res) => {
     if (!universityId) {
       return res.status(400).json({ error: "University ID is required" });
     }
-
     const snapshots = await Snapshot.findAll(universityId, path, courseId);
     res.json(snapshots);
   } catch (error) {
